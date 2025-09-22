@@ -1,44 +1,36 @@
-# syntax = docker/dockerfile:1.5
+# intentionally-vulnerable Dockerfile
+FROM debian:10 as builder
 
-FROM ubuntu:22.04 AS base
+# purposefully use older packages (Debian 10/buster) and pin old versions
+ENV LANG=C.UTF-8
 
-# Install many OS-level dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-         build-essential \
-         python3 \
-         python3-pip \
-         nodejs \
-         npm \
-         openjdk-17-jdk \
-         git \
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      curl=7.64.0-4 \
+      git=1:2.20.1-2+deb10u3 \
+      python3=3.7.3-1 \
+      python3-pip=18.1-5 \
+      nodejs=10.19.0~dfsg-3 \
+      npm=6.9.0~dfsg-3 \
+      openssh-client=1:7.9p1-10+deb10u2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a work dir
 WORKDIR /app
 
-# Add many Python dependencies
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+# Add a small Python project with pinned (old) packages
+COPY requirements.txt /app/requirements.txt
+RUN pip3 --no-cache-dir install -r /app/requirements.txt
 
-# Add many Node dependencies
-COPY package.json package-lock.json ./
-RUN npm install
+# Add a JS project with older deps
+COPY package.json package-lock.json /app/
+RUN npm ci --no-audit --no-fund
 
-# Clone some large repositories to include many files / packages
-RUN git clone https://github.com/apache/spark.git \
-    && git clone https://github.com/kubernetes/kubernetes.git
+# Copy a simple vulnerable web app (no exploits — just sample code)
+COPY webapp /app/webapp
 
-# Build something from one of those repos (will pull in build tools, etc.)
-RUN cd spark && \
-    ./build/mvn -DskipTests clean package
-
-# Final stage: reduce image size (optional)
-FROM ubuntu:22.04 AS final
-
+# Final image (keep all build artifacts so SBOM includes them)
+FROM debian:10
+COPY --from=builder /app /app
 WORKDIR /app
-
-# Copy everything from base
-COPY --from=base /app /app
-
-CMD ["bash"]
+EXPOSE 8080
+CMD ["python3", "/app/webapp/app.py"]
