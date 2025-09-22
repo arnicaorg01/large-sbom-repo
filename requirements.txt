@@ -1,12 +1,5 @@
-numpy
-scipy
-pandas
-scikit-learn
-tensorflow
-flask
-django
-matplotlib
-pillow
-requests
-boto3
-etc...
+flask==1.0.2
+requests==2.18.4
+urllib3==1.22
+pyyaml==3.13
+werkzeug==0.14.1
