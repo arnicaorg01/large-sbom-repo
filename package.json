@@ -1,15 +1,9 @@
 {
-  "name": "large-sbom-test",
+  "name": "vuln-sample",
   "version": "1.0.0",
   "dependencies": {
-    "express": "^4.18.2",
-    "lodash": "^4.17.21",
-    "react": "^18.2.0",
-    "webpack": "^5.88.0",
-    "typescript": "^5.1.6",
-    "axios": "^1.4.0",
-    "gulp": "^4.0.2",
-    "mocha": "^10.2.0"
-    // add more
+    "express": "4.16.0",
+    "lodash": "4.17.10",
+    "request": "2.88.0"
   }
 }
