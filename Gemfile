@@ -1,0 +1,6 @@
+source "https://rubygems.org"
+gem "rails", "7.0.8"
+gem "nokogiri", "1.14.5"
+gem "httparty", "0.21.0"
+gem "puma", "6.1.1"
+gem "sidekiq", "7.0.0"
