@@ -1,9 +1,20 @@
 {
-  "name": "vuln-sample",
+  "name": "large-sbom-sample",
   "version": "1.0.0",
+  "private": true,
   "dependencies": {
-    "express": "4.16.0",
-    "lodash": "4.17.10",
-    "request": "2.88.0"
+    "lodash": "4.17.21",
+    "express": "4.18.2",
+    "request": "2.88.2",
+    "axios": "1.4.0",
+    "moment": "2.29.4",
+    "debug": "4.3.4",
+    "bluebird": "3.7.2",
+    "uuid": "9.0.0",
+    "js-yaml": "4.1.0",
+    "mime-types": "2.1.35",
+    "cheerio": "1.0.0-rc.12",
+    "qs": "6.11.0",
+    "mustache": "4.2.0"
   }
 }
