@@ -1,36 +1,30 @@
-# intentionally-vulnerable Dockerfile
-FROM debian:10 as builder
+# large-sbom-repo/Dockerfile
+FROM debian:12-slim AS base
 
-# purposefully use older packages (Debian 10/buster) and pin old versions
-ENV LANG=C.UTF-8
-
+# Add many OS packages (creates many package entries)
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      curl=7.64.0-4 \
-      git=1:2.20.1-2+deb10u3 \
-      python3=3.7.3-1 \
-      python3-pip=18.1-5 \
-      nodejs=10.19.0~dfsg-3 \
-      npm=6.9.0~dfsg-3 \
-      openssh-client=1:7.9p1-10+deb10u2 \
-    && rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+      build-essential curl wget git ca-certificates python3 python3-pip ruby-full nodejs npm \
+      libssl-dev libxml2-dev libxslt1-dev zlib1g-dev libpq-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Add a small Python project with pinned (old) packages
-COPY requirements.txt /app/requirements.txt
-RUN pip3 --no-cache-dir install -r /app/requirements.txt
+# Copy three ecosystems' dependency manifests to force many SBOM entries
+COPY package.json package-lock.json* /app/
+COPY requirements.txt /app/
+COPY Gemfile Gemfile.lock* /app/
 
-# Add a JS project with older deps
-COPY package.json package-lock.json /app/
-RUN npm ci --no-audit --no-fund
+# Install Node deps (creates node_modules at image build-time)
+RUN if [ -f package.json ]; then npm install --package-lock --no-audit --no-fund; fi
 
-# Copy a simple vulnerable web app (no exploits — just sample code)
-COPY webapp /app/webapp
+# Install Python deps
+RUN if [ -f requirements.txt ]; then python3 -m pip install --no-cache-dir -r requirements.txt; fi
 
-# Final image (keep all build artifacts so SBOM includes them)
-FROM debian:10
-COPY --from=builder /app /app
-WORKDIR /app
-EXPOSE 8080
-CMD ["python3", "/app/webapp/app.py"]
+# Install Ruby deps
+RUN if [ -f Gemfile ]; then gem install bundler && bundle install --jobs=4 --retry=3; fi
+
+# Add a small app file
+COPY . /app
+
+CMD ["sleep","infinity"]
